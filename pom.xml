@@ -13,7 +13,7 @@
 
     <groupId>com.cryptopulse</groupId>
     <artifactId>cryptopulse-backend</artifactId>
-    <version>1.0.0</version>
+    <version>1.0.1</version>
     <name>CryptoPulse</name>
     <description>Multi-Source Real-Time Market Intelligence &amp; Anomaly Detection Engine</description>
 
