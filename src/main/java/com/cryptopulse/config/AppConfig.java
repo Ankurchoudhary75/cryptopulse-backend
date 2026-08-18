@@ -9,6 +9,7 @@ import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.context.annotation.Primary;
 import org.springframework.core.env.Environment;
+import org.springframework.http.HttpHeaders;
 import org.springframework.scheduling.concurrent.ThreadPoolTaskExecutor;
 import org.springframework.web.client.RestTemplate;
 
@@ -69,6 +70,12 @@ public class AppConfig {
         return builder
                 .setConnectTimeout(Duration.ofMillis(properties.getConnectionTimeoutMs()))
                 .setReadTimeout(Duration.ofMillis(properties.getReadTimeoutMs()))
+                .additionalInterceptors((request, body, execution) -> {
+                    request.getHeaders().set(HttpHeaders.USER_AGENT, "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36");
+                    request.getHeaders().set(HttpHeaders.ACCEPT, "application/json, text/plain, */*");
+                    request.getHeaders().set(HttpHeaders.ACCEPT_LANGUAGE, "en-US,en;q=0.9");
+                    return execution.execute(request, body);
+                })
                 .build();
     }
 
