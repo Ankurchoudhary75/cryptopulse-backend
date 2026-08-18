@@ -1,0 +1,28 @@
+services:
+  - type: web
+    name: cryptopulse-backend
+    env: docker
+    dockerfilePath: ./Dockerfile
+    plan: free
+    healthCheckPath: /actuator/health
+    envVars:
+      - key: PORT
+        value: 8080
+      - key: SPRING_DATASOURCE_URL
+        fromDatabase:
+          name: cryptopulse-db
+          property: connectionString
+      - key: SPRING_DATASOURCE_USERNAME
+        fromDatabase:
+          name: cryptopulse-db
+          property: user
+      - key: SPRING_DATASOURCE_PASSWORD
+        fromDatabase:
+          name: cryptopulse-db
+          property: password
+
+databases:
+  - name: cryptopulse-db
+    databaseName: cryptopulse
+    user: postgres
+    plan: free
