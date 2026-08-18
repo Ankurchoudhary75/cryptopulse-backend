@@ -13,15 +13,15 @@
 
 ## 🚀 Live Production Deployment
 
-- 🌐 **Live Base Service URL**: [https://cryptopulse-backend.onrender.com/](https://cryptopulse-backend.onrender.com/)
-- 🩺 **Health Check Endpoint**: [https://cryptopulse-backend.onrender.com/actuator/health](https://cryptopulse-backend.onrender.com/actuator/health)
-- 📚 **Interactive Swagger UI**: [https://cryptopulse-backend.onrender.com/swagger-ui.html](https://cryptopulse-backend.onrender.com/swagger-ui.html)
-- 📈 **Market Ticker Listing API**: [https://cryptopulse-backend.onrender.com/api/v1/tickers](https://cryptopulse-backend.onrender.com/api/v1/tickers)
-- 🚨 **Market Anomalies Feed**: [https://cryptopulse-backend.onrender.com/api/v1/anomalies](https://cryptopulse-backend.onrender.com/api/v1/anomalies)
-- 📡 **Real-Time SSE Stream**: [https://cryptopulse-backend.onrender.com/api/v1/anomalies/stream](https://cryptopulse-backend.onrender.com/api/v1/anomalies/stream)
-- 📊 **Market Intelligence Analytics**: [https://cryptopulse-backend.onrender.com/api/v1/analytics/market-summary](https://cryptopulse-backend.onrender.com/api/v1/analytics/market-summary)
-- 📝 **Ingestion Audit Trail**: [https://cryptopulse-backend.onrender.com/api/v1/ingestion/status](https://cryptopulse-backend.onrender.com/api/v1/ingestion/status)
-- 🔌 **Provider Health Metrics**: [https://cryptopulse-backend.onrender.com/api/v1/ingestion/providers](https://cryptopulse-backend.onrender.com/api/v1/ingestion/providers)
+- 🌐 **Live Base Service URL**: [https://cryptopulse-backend-o2zp.onrender.com/](https://cryptopulse-backend-o2zp.onrender.com/)
+- 🩺 **Health Check Endpoint**: [https://cryptopulse-backend-o2zp.onrender.com/actuator/health](https://cryptopulse-backend-o2zp.onrender.com/actuator/health)
+- 📚 **Interactive Swagger UI**: [https://cryptopulse-backend-o2zp.onrender.com/swagger-ui.html](https://cryptopulse-backend-o2zp.onrender.com/swagger-ui.html)
+- 📈 **Market Ticker Listing API**: [https://cryptopulse-backend-o2zp.onrender.com/api/v1/tickers](https://cryptopulse-backend-o2zp.onrender.com/api/v1/tickers)
+- 🚨 **Market Anomalies Feed**: [https://cryptopulse-backend-o2zp.onrender.com/api/v1/anomalies](https://cryptopulse-backend-o2zp.onrender.com/api/v1/anomalies)
+- 📡 **Real-Time SSE Stream**: [https://cryptopulse-backend-o2zp.onrender.com/api/v1/anomalies/stream](https://cryptopulse-backend-o2zp.onrender.com/api/v1/anomalies/stream)
+- 📊 **Market Intelligence Analytics**: [https://cryptopulse-backend-o2zp.onrender.com/api/v1/analytics/market-summary](https://cryptopulse-backend-o2zp.onrender.com/api/v1/analytics/market-summary)
+- 📝 **Ingestion Audit Trail**: [https://cryptopulse-backend-o2zp.onrender.com/api/v1/ingestion/status](https://cryptopulse-backend-o2zp.onrender.com/api/v1/ingestion/status)
+- 🔌 **Provider Health Metrics**: [https://cryptopulse-backend-o2zp.onrender.com/api/v1/ingestion/providers](https://cryptopulse-backend-o2zp.onrender.com/api/v1/ingestion/providers)
 
 ---
 
@@ -30,7 +30,7 @@
 CryptoPulse is a high-throughput, fault-tolerant backend intelligence pipeline designed to pull, normalize, validate, deduplicate, and analyze real-time market pricing and volume metrics from public endpoints into PostgreSQL.
 
 ### Key Architectural Superiorities
-- 🔄 **Multi-Source Resilient Adapter Pattern**: Priority-ranked API adapter registry (`CoinGeckoAdapter` primary, `CoinCapAdapter` secondary failover). If the primary provider experiences rate limits (429/5xx) or timeouts, the system dynamically fails over to the secondary source while updating operational health metrics in `ProviderHealth`.
+- 🔄 **Multi-Source Resilient Adapter Pattern**: Priority-ranked API adapter registry (`CoinGeckoAdapter` primary, `CoinCapAdapter` secondary, `CoinbaseAdapter` tertiary failover). If the primary provider experiences rate limits (429/5xx) or timeouts, the system dynamically fails over to alternative sources while updating operational health metrics in `ProviderHealth`.
 - 🚨 **Automated Price Anomaly Engine**: Evaluates incoming market data against surge and crash thresholds (e.g. >5% movement), classifying anomalies by severity (`LOW`, `MEDIUM`, `HIGH`, `CRITICAL`).
 - 📡 **Real-Time Event Streaming (SSE)**: Publishes `MarketAnomalyEvent` signals via Spring's `ApplicationEventPublisher` and streams live push notifications to connected web dashboard clients via Server-Sent Events (`/api/v1/anomalies/stream`).
 - 🛡️ **Database-Backed Rate Limiting**: Cooldown tracking stored directly in PostgreSQL (`ingestion_logs` table) so rate limits survive container restarts and redeployments.
@@ -53,12 +53,12 @@ CryptoPulse is a high-throughput, fault-tolerant backend intelligence pipeline d
         ┌───────────────────────┼───────────────────────┐
         ▼                       ▼                       ▼
  DB Cooldown Check         Atomic Lock       Multi-Source Registry
-  (ingestion_logs)       (Single-Flight)     ┌──────────┴──────────┐
-        │                       │            ▼                     ▼
-        └───────────────────────┼───► Primary Adapter     Secondary Adapter
-                                │     (CoinGecko)            (CoinCap)
-                                │            │                     │
-                                │            └──────────┬──────────┘
+  (ingestion_logs)       (Single-Flight)     ┌──────────┼──────────┐
+        │                       │            ▼          ▼          ▼
+        └───────────────────────┼───► Primary    Secondary  Tertiary
+                                │     (CoinGecko) (CoinCap)  (Coinbase)
+                                │            │          │          │
+                                │            └──────────┼──────────┘
                                 │                       │
                                 ▼                       ▼
                            Parse → Normalize → Validate
@@ -97,25 +97,25 @@ CryptoPulse is a high-throughput, fault-tolerant backend intelligence pipeline d
 ## 🌐 API Endpoints & Interactive Swagger UI
 
 ### Interactive OpenAPI Documentation
-- **Swagger UI Dashboard**: `https://cryptopulse-backend.onrender.com/swagger-ui.html`
-- **OpenAPI 3.0 JSON Spec**: `https://cryptopulse-backend.onrender.com/v3/api-docs`
+- **Swagger UI Dashboard**: `https://cryptopulse-backend-o2zp.onrender.com/swagger-ui.html`
+- **OpenAPI 3.0 JSON Spec**: `https://cryptopulse-backend-o2zp.onrender.com/v3/api-docs`
 
 ### REST API Route Table
 
 | Method | Live Production Route | Description |
 | :--- | :--- | :--- |
-| `GET` | `https://cryptopulse-backend.onrender.com/` | Service metadata & route discovery |
-| `GET` | `https://cryptopulse-backend.onrender.com/actuator/health` | Application & database connection health check |
-| `GET` | `https://cryptopulse-backend.onrender.com/api/v1/tickers` | List & filter market tickers (supports `keyword`, `source`, `page`, `size`) |
-| `GET` | `https://cryptopulse-backend.onrender.com/api/v1/tickers/{id}` | Get single market ticker by internal primary key |
-| `GET` | `https://cryptopulse-backend.onrender.com/api/v1/tickers/symbol/{symbol}` | Get single market ticker detail by asset symbol |
-| `GET` | `https://cryptopulse-backend.onrender.com/api/v1/anomalies` | Retrieve historical price surge & crash anomalies |
-| `GET` | `https://cryptopulse-backend.onrender.com/api/v1/anomalies/latest` | Retrieve 20 most recent market anomalies |
-| `GET` | `https://cryptopulse-backend.onrender.com/api/v1/anomalies/stream` | **Real-time Server-Sent Events (SSE)** anomaly stream |
-| `GET` | `https://cryptopulse-backend.onrender.com/api/v1/analytics/market-summary` | Macro analytics (total market cap, top gainers/losers, 24h anomaly count) |
-| `GET` | `https://cryptopulse-backend.onrender.com/api/v1/ingestion/status` | Ingestion run audit trail |
-| `GET` | `https://cryptopulse-backend.onrender.com/api/v1/ingestion/providers` | Multi-source health & circuit-breaker metrics |
-| `POST` | `https://cryptopulse-backend.onrender.com/api/v1/ingestion/run` | Trigger manual ingestion run (`force=true` overrides cooldown) |
+| `GET` | `https://cryptopulse-backend-o2zp.onrender.com/` | Service metadata & route discovery |
+| `GET` | `https://cryptopulse-backend-o2zp.onrender.com/actuator/health` | Application & database connection health check |
+| `GET` | `https://cryptopulse-backend-o2zp.onrender.com/api/v1/tickers` | List & filter market tickers (supports `keyword`, `source`, `page`, `size`) |
+| `GET` | `https://cryptopulse-backend-o2zp.onrender.com/api/v1/tickers/{id}` | Get single market ticker by internal primary key |
+| `GET` | `https://cryptopulse-backend-o2zp.onrender.com/api/v1/tickers/symbol/{symbol}` | Get single market ticker detail by asset symbol |
+| `GET` | `https://cryptopulse-backend-o2zp.onrender.com/api/v1/anomalies` | Retrieve historical price surge & crash anomalies |
+| `GET` | `https://cryptopulse-backend-o2zp.onrender.com/api/v1/anomalies/latest` | Retrieve 20 most recent market anomalies |
+| `GET` | `https://cryptopulse-backend-o2zp.onrender.com/api/v1/anomalies/stream` | **Real-time Server-Sent Events (SSE)** anomaly stream |
+| `GET` | `https://cryptopulse-backend-o2zp.onrender.com/api/v1/analytics/market-summary` | Macro analytics (total market cap, top gainers/losers, 24h anomaly count) |
+| `GET` | `https://cryptopulse-backend-o2zp.onrender.com/api/v1/ingestion/status` | Ingestion run audit trail |
+| `GET` | `https://cryptopulse-backend-o2zp.onrender.com/api/v1/ingestion/providers` | Multi-source health & circuit-breaker metrics |
+| `POST` | `https://cryptopulse-backend-o2zp.onrender.com/api/v1/ingestion/run` | Trigger manual ingestion run (`force=true` overrides cooldown) |
 
 ---
 

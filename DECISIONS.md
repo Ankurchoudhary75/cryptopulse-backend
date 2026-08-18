@@ -3,9 +3,9 @@
 > **Acdyon Technologies Engineering Challenge Submission — Part 1: Ingestion Pipeline & Intelligence Engine**  
 > *Author:* Ankur Choudhary ([`@Ankurchoudhary75`](https://github.com/Ankurchoudhary75)) | *Service:* **CryptoPulse**
 > 
-> - 🌐 **Live Deployed Base URL**: [https://cryptopulse-backend.onrender.com/](https://cryptopulse-backend.onrender.com/)
-> - 🩺 **Live Health Check**: [https://cryptopulse-backend.onrender.com/actuator/health](https://cryptopulse-backend.onrender.com/actuator/health)
-> - 📚 **Live Swagger UI**: [https://cryptopulse-backend.onrender.com/swagger-ui.html](https://cryptopulse-backend.onrender.com/swagger-ui.html)
+> - 🌐 **Live Deployed Base URL**: [https://cryptopulse-backend-o2zp.onrender.com/](https://cryptopulse-backend-o2zp.onrender.com/)
+> - 🩺 **Live Health Check**: [https://cryptopulse-backend-o2zp.onrender.com/actuator/health](https://cryptopulse-backend-o2zp.onrender.com/actuator/health)
+> - 📚 **Live Swagger UI**: [https://cryptopulse-backend-o2zp.onrender.com/swagger-ui.html](https://cryptopulse-backend-o2zp.onrender.com/swagger-ui.html)
 > - 🐙 **GitHub Repository**: [https://github.com/Ankurchoudhary75/cryptopulse-backend](https://github.com/Ankurchoudhary75/cryptopulse-backend)
 
 ---
@@ -37,14 +37,14 @@ flowchart TD
 > 2. **Heavy Infrastructure Cost**: Running headless Chrome instances consumes 300MB+ RAM per worker with 10x slower execution latency compared to lightweight HTTP API calls.
 > 3. **DOM Instability**: A single CSS class name update by the target site breaks parsing without warning.
 > 
-> **Our Chosen Strategy**: A **Multi-Source Resilient API Adapter Pattern** (`CoinGeckoAdapter` primary, `CoinCapAdapter` secondary failover). This approach guarantees stable structured data contracts, high throughput, sub-second execution, zero ToS violations, and seamless automatic failover if the primary provider experiences rate limits.
+> **Our Chosen Strategy**: A **Multi-Source Resilient API Adapter Pattern** (`CoinGeckoAdapter` primary, `CoinCapAdapter` secondary, `CoinbaseAdapter` tertiary failover). This approach guarantees stable structured data contracts, high throughput, sub-second execution, zero ToS violations, and seamless automatic failover if the primary provider experiences rate limits.
 
 ---
 
 ### Q2: One trade-off made under the time limit, and what you’d do with a real week
 
 > [!NOTE]
-> **Time-Box Trade-Off**: Under the challenge time limit, we built 2 high-priority API adapters (`CoinGeckoAdapter` and `CoinCapAdapter`) with in-memory & database-backed status failover and single-instance `AtomicBoolean` concurrency control, rather than a multi-node distributed proxy mesh.
+> **Time-Box Trade-Off**: Under the challenge time limit, we built 3 high-priority API adapters (`CoinGeckoAdapter`, `CoinCapAdapter`, `CoinbaseAdapter`) with in-memory & database-backed status failover and single-instance `AtomicBoolean` concurrency control, rather than a multi-node distributed proxy mesh.
 
 #### What We Would Build With a Full Week:
 1. **Distributed Proxy & IP Rotation Pool**: Integrate residential proxy pools (e.g. BrightData / Smartproxy) with automatic IP rotation per request batch.
@@ -72,7 +72,7 @@ flowchart TD
 | Design Axis | Specific Threats & Engineering Countermeasures |
 | :--- | :--- |
 | **1. Detection Surface** | • **Headers & User-Agent**: Automated HTTP clients omit standard browser headers (`Sec-Ch-Ua`, `Accept-Language`). *Countermeasure*: Inject custom browser-grade `User-Agent` and header presets.<br>• **Request Pacing**: Uniform interval triggers trigger rate-limiting heuristics. *Countermeasure*: Enforce randomized backoff intervals and database-backed cooldown tracking.<br>• **IP & Fingerprinting**: High-frequency single-IP requests hit 429 rate limits. *Countermeasure*: Low-frequency polling combined with multi-provider failover. |
-| **2. Ingestion Strategy** | • **Primary/Secondary Failover**: `CoinGeckoAdapter` (Priority 1) executes first. If it returns 429 or times out, `IngestionOrchestrator` immediately shifts execution to `CoinCapAdapter` (Priority 2).<br>• **Single-Flight Guard**: `AtomicBoolean` prevents concurrent execution races.<br>• **Cooldown Tracking**: 15-minute rate limit window enforced via PostgreSQL `ingestion_logs`. |
+| **2. Ingestion Strategy** | • **Primary/Secondary/Tertiary Failover**: `CoinGeckoAdapter` (Priority 1) executes first. If throttled, `IngestionOrchestrator` shifts execution to `CoinCapAdapter` (Priority 2) or `CoinbaseAdapter` (Priority 3).<br>• **Single-Flight Guard**: `AtomicBoolean` prevents concurrent execution races.<br>• **Cooldown Tracking**: 15-minute rate limit window enforced via PostgreSQL `ingestion_logs`. |
 | **3. Resilience** | • **Schema Drift & Null Fields**: `MarketDataValidator` filters malformed payloads (missing symbols, zero prices).<br>• **Data Normalization**: `MarketDataNormalizer` standardizes decimal scaling (`BigDecimal`), string lengths, and ISO-8601 timestamps.<br>• **Circuit Breaker**: `ProviderHealth` entity tracks consecutive failures and degrades provider health status automatically. |
 | **4. Ethical Boundary (Where We Stop)** | • **ToS Respect**: We exclusively consume authorized public API endpoints without bypassing CAPTCHAs, cracking credentials, or scraping private user data behind authentication.<br>• **Rate Limit Compliance**: Pipeline strictly adheres to provider request quotas and cooldown windows. |
 
@@ -92,12 +92,12 @@ flowchart TD
         ┌───────────────────────┼───────────────────────┐
         ▼                       ▼                       ▼
  DB Cooldown Check         Atomic Lock       Multi-Source Registry
-  (ingestion_logs)       (Single-Flight)     ┌──────────┴──────────┐
-        │                       │            ▼                     ▼
-        └───────────────────────┼───► Primary Adapter     Secondary Adapter
-                                │     (CoinGecko)            (CoinCap)
-                                │            │                     │
-                                │            └──────────┬──────────┘
+  (ingestion_logs)       (Single-Flight)     ┌──────────┼──────────┐
+        │                       │            ▼          ▼          ▼
+        └───────────────────────┼───► Primary    Secondary  Tertiary
+                                │     (CoinGecko) (CoinCap)  (Coinbase)
+                                │            │          │          │
+                                │            └──────────┼──────────┘
                                 │                       │
                                 ▼                       ▼
                            Parse → Normalize → Validate
