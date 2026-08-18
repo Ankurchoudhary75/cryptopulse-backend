@@ -1,7 +1,12 @@
 # DECISIONS.md — System Architecture & Ingestion Design
 
-> **Acdyon Technologies Engineering Challenge — Part 1: Ingestion Pipeline & Intelligence Engine**  
+> **Acdyon Technologies Engineering Challenge Submission — Part 1: Ingestion Pipeline & Intelligence Engine**  
 > *Author:* Ankur Choudhary ([`@Ankurchoudhary75`](https://github.com/Ankurchoudhary75)) | *Service:* **CryptoPulse**
+> 
+> - 🌐 **Live Deployed Base URL**: [https://cryptopulse-backend.onrender.com/](https://cryptopulse-backend.onrender.com/)
+> - 🩺 **Live Health Check**: [https://cryptopulse-backend.onrender.com/actuator/health](https://cryptopulse-backend.onrender.com/actuator/health)
+> - 📚 **Live Swagger UI**: [https://cryptopulse-backend.onrender.com/swagger-ui.html](https://cryptopulse-backend.onrender.com/swagger-ui.html)
+> - 🐙 **GitHub Repository**: [https://github.com/Ankurchoudhary75/cryptopulse-backend](https://github.com/Ankurchoudhary75/cryptopulse-backend)
 
 ---
 
