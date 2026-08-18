@@ -10,6 +10,13 @@ import org.springframework.scheduling.annotation.EnableScheduling;
 @EnableAsync
 public class CryptoPulseApplication {
 
+    static {
+        String dbUrl = System.getenv("SPRING_DATASOURCE_URL");
+        if (dbUrl != null && !dbUrl.isBlank() && !dbUrl.startsWith("jdbc:")) {
+            System.setProperty("SPRING_DATASOURCE_URL", "jdbc:" + dbUrl);
+        }
+    }
+
     public static void main(String[] args) {
         SpringApplication.run(CryptoPulseApplication.class, args);
     }
