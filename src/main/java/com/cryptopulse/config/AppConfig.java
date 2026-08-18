@@ -3,9 +3,12 @@ package com.cryptopulse.config;
 import com.fasterxml.jackson.databind.DeserializationFeature;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
+import org.springframework.boot.autoconfigure.jdbc.DataSourceProperties;
 import org.springframework.boot.web.client.RestTemplateBuilder;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.context.annotation.Primary;
+import org.springframework.core.env.Environment;
 import org.springframework.scheduling.concurrent.ThreadPoolTaskExecutor;
 import org.springframework.web.client.RestTemplate;
 
@@ -19,6 +22,34 @@ public class AppConfig {
 
     public AppConfig(IngestionProperties properties) {
         this.properties = properties;
+    }
+
+    @Bean
+    @Primary
+    public DataSourceProperties dataSourceProperties(Environment env) {
+        DataSourceProperties properties = new DataSourceProperties();
+        String url = env.getProperty("SPRING_DATASOURCE_URL");
+        if (url == null || url.isBlank()) {
+            url = env.getProperty("spring.datasource.url");
+        }
+        if (url != null && !url.isBlank() && !url.startsWith("jdbc:")) {
+            url = "jdbc:" + url;
+        }
+        if (url != null && !url.isBlank()) {
+            properties.setUrl(url);
+        }
+        properties.setDriverClassName("org.postgresql.Driver");
+
+        String username = env.getProperty("SPRING_DATASOURCE_USERNAME");
+        if (username != null && !username.isBlank()) {
+            properties.setUsername(username);
+        }
+        String password = env.getProperty("SPRING_DATASOURCE_PASSWORD");
+        if (password != null && !password.isBlank()) {
+            properties.setPassword(password);
+        }
+
+        return properties;
     }
 
     @Bean
